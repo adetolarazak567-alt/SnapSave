@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Snap Downloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    .card {
+      background: #1f1f1f;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      width: 300px;
+    }
+    button {
+      background-color: #fffc00;
+      color: black;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background-color: #fff66b;
+    }
+    #stats {
+      font-size: 1.5rem;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>📊 Admin Dashboard</h1>
+    <div id="stats">Loading stats...</div>
+    <button id="resetBtn">Reset Stats</button>
+  </div>
+
+  <script>
+    const API_BASE = "https://YOUR_RENDER_URL_HERE"; // replace after deploy
+    const password = prompt("Enter admin password:");
+
+    async function loadStats() {
+      try {
+        const loginRes = await fetch(`${API_BASE}/admin/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password })
+        });
+        const loginData = await loginRes.json();
+
+        if (!loginRes.ok || !loginData.success) {
+          alert("❌ Invalid password!");
+          window.location.href = "index.html";
+          return;
+        }
+
+        const statsRes = await fetch(`${API_BASE}/admin/stats?password=${password}`);
+        const statsData = await statsRes.json();
+        document.getElementById("stats").innerText =
+          `Total Downloads: ${statsData.downloads}`;
+      } catch (err) {
+        document.getElementById("stats").innerText = "⚠️ Error loading stats.";
+      }
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", async () => {
+      const confirmReset = confirm("Reset download count?");
+      if (!confirmReset) return;
+
+      await fetch(`${API_BASE}/admin/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+
+      alert("✅ Stats reset successfully!");
+      loadStats();
+    });
+
+    loadStats();
+  </script>
+</body>
+</html>
