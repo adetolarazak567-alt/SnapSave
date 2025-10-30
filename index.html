@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapSave – Snapchat Video Downloader</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background: linear-gradient(180deg, #fffc00, #fff);
+      color: #111;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+    header {
+      padding: 1rem;
+      text-align: center;
+      width: 100%;
+      background: #fffc00;
+      color: #000;
+      font-weight: bold;
+      font-size: 1.5rem;
+      border-bottom: 2px solid #000;
+    }
+    .container {
+      margin-top: 2rem;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      background: #fff;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    button {
+      background: #fffc00;
+      border: 2px solid #000;
+      border-radius: 2rem;
+      padding: 0.7rem 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #fff700;
+    }
+    .result {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .admin-btn {
+      margin-top: 1.5rem;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      color: #007aff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>SnapSave 📸</header>
+  <div class="container">
+    <h2>Download Snapchat Videos</h2>
+    <p>Paste the Snapchat shared link below 👇</p>
+    <input id="snapLink" type="text" placeholder="https://www.snapchat.com/...">
+    <button onclick="downloadVideo()">Download</button>
+    <div class="result" id="result"></div>
+    <button class="admin-btn" onclick="askAdminPassword()">Go to Admin Page</button>
+  </div>
+
+  <script>
+    const backendURL = 'https://your-backend.onrender.com'; // replace with your Render URL
+
+    async function downloadVideo() {
+      const link = document.getElementById('snapLink').value.trim();
+      if (!link) return alert('Enter a Snapchat link');
+      const resBox = document.getElementById('result');
+      resBox.textContent = 'Processing...';
+      try {
+        const res = await fetch(`${backendURL}/download`, {  // ✅ fixed
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: link })
+        });
+        if (!res.ok) {
+          resBox.textContent = 'Failed to fetch video.';
+          return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'snap_video.mp4';
+        a.click();
+        resBox.textContent = '✅ Download started!';
+      } catch {
+        resBox.textContent = 'Error connecting to server.';
+      }
+    }
+
+    async function askAdminPassword() {
+      const password = prompt("Enter admin password:");
+      if (!password) return;
+      try {
+        const res = await fetch(`${backendURL}/admin/login`, {  // ✅ fixed
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = 'admin.html';
+        } else {
+          alert("Wrong password!");
+        }
+      } catch {
+        alert("Server error!");
+      }
+    }
+  </script>
+</body>
+</html>
